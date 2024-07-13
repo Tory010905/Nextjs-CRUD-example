@@ -1,6 +1,7 @@
 import { TodoListData, TodoListProps } from "@/components/todoList";
+import { GetTasksForList } from "./taskHandlers";
 
-export const API_ROUTE = "https://6690e00f26c2a69f6e8d72f6.mockapi.io/api/v1"
+const API_ROUTE = "https://6690e00f26c2a69f6e8d72f6.mockapi.io/api/v1"
 
 interface GetListsParams{
     username? : string,
@@ -38,7 +39,7 @@ export async function GetListsForUser(params: GetListsParams) : Promise<TodoList
     // }
 
     //%5Cb == /b for regex 
-    return await fetch(`${API_ROUTE}/todoLists?username=%5Cb${params.username}%5Cb`)
+    let todoLists : TodoListProps[] = await fetch(`${API_ROUTE}/todoLists?username=%5Cb${params.username}%5Cb`)
         .then(response => {
             if(!response.ok){
                 return [];
@@ -47,14 +48,24 @@ export async function GetListsForUser(params: GetListsParams) : Promise<TodoList
 
             return response.json();
         })
-        .then(response => {   
-            if(params.onFetchComplete){
-                params.onFetchComplete(response);
-            }
-
-            return response;
-        })
         .catch(err => console.log(err));
+
+    const taskFetchPromises = todoLists.map(async (list) => {
+        
+        list.tasks = await GetTasksForList({
+            listId : list.id
+        })
+
+        return list;
+    });
+
+    await Promise.all(taskFetchPromises);
+
+    if(params.onFetchComplete){
+        params.onFetchComplete(todoLists);
+    }
+
+    return todoLists;
 }
 
 interface PostListParams {

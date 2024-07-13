@@ -1,17 +1,11 @@
 'use client'
 
-import { DeleteTodoList, UpdateTodoList } from "@/handlers/apiHandlers"
+import { DeleteTodoList, UpdateTodoList } from "@/handlers/listHandlers"
 import moment from "moment";
 import { useEffect, useState, KeyboardEvent, useRef, TextareaHTMLAttributes } from "react";
 import { Tag, TagProps } from "./tag";
-
-export enum PriorityEnum {
-    NONE,
-    LOW,
-    MEDIUM,
-    HIGH,
-    EXTREME
-}
+import { PriorityEnum, TodoTask, TodoTaskData } from "./todoTask";
+import { AddTodoTaskToList, DeleteTodoTaskFromList } from "@/handlers/taskHandlers";
 
 function PriorityToHexColor(priority : PriorityEnum){
     switch(priority){
@@ -22,12 +16,9 @@ function PriorityToHexColor(priority : PriorityEnum){
 
 export interface TodoListData {
     id : number,
-    text : string,
     username : string,
-    completed? : boolean
-    tags? : string[],
-    dueDate? : Date,
-    priority? : PriorityEnum,
+    title : string,
+    tasks : TodoTaskData[]
 }
     
 
@@ -35,188 +26,67 @@ export interface TodoListProps extends TodoListData  {
     onListDelete : (id : number) => void
 }
 
+
 export const TodoList = (props : TodoListProps) => {
-    
-    const [originalText, setOriginalText] = useState(props.text);
-    const [newText, setNewText] = useState(props.text);
-    const [editMode, setEditMode] = useState(false);
-    const [completed, setCompleted] = useState<boolean>(props.completed ?? false);
-    const [hover, setHover] = useState<boolean>(false);
-    const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
-    // useEffect(() => {
-    //     setEdited(newText != originalText);
-    // }, [newText, originalText]);
+    const [tasks, setTasks] = useState<TodoTaskData[]>(props.tasks);
 
-    const handleUndoClick = () => {
-        setNewText(originalText);
-
-        setEditMode(false);
-    }
-    
-    const handleTextUpdate = (params : TodoListData) => {
-        UpdateTodoList({
-            listData : params
-        });
-
-
-        setOriginalText(newText);
-
-        setEditMode(false);
-    }
-
-    const handleCompleted = (params : TodoListData) => {
-        UpdateTodoList({
-            listData : params
-        });
-
-        setCompleted(params.completed ?? false);
-    }
-
-    const handleKeyDown = (e : KeyboardEvent<HTMLTextAreaElement>) => {
-        switch(e.key){
-            case "Escape": handleUndoClick(); break;
-            case "Enter" : 
-                if(e.shiftKey){
-                    break;
-                }
-
-                handleTextUpdate({
-                    id : props.id,
-                    text : newText,
-                    username : props.username
-                })
-                break;
-            default: break;
-        }
-    }
-
-    const handleDelete = () => {
-        props.onListDelete(props.id);
-
-        DeleteTodoList({
-            id : props.id
-        });
-    }
-
-
-    //preparing data for tags
-    const tagsData : TagProps[] = [];
-    if(props.priority){
-        tagsData.push({
-            text : props.priority.toString()
+    const handleAddTask = () => {
+        AddTodoTaskToList({
+            listId : props.id,
+            taskData : {
+                completed : false,
+                id : 0,
+                todoListId : props.id,
+                text : "example text"
+            },
+            onFetchComplete : (validData) => {
+                setTasks(array => [...array, validData])
+            }
         })
     }
 
-    if(props.dueDate){
-        tagsData.push({
-            iconPath : "calender.svg",
-            text : moment(props.dueDate).format("DD.MM.YYYY")
+    const handleTaskDelete = (taskId : number) => {
+        DeleteTodoTaskFromList({
+            id : taskId,
+            listId : props.id,
+            onFetchComplete : () => {
+                let filteredTasks= tasks.filter(x => x.id != taskId);
+                setTasks(filteredTasks);
+            }
         })
     }
-
-    props.tags?.map(tag => {
-        tagsData.push({
-            text : tag
-        });
-    })
-
-
+    
 
     return (
-        <div className="px-[12px] py-[10px] w-[500px] border-b-[1px]">
-            <div className="flex gap-x-[10px] justify-stretch items-center "
-                onMouseEnter={() => setHover(true)}
-                onMouseLeave={() => setHover(false)}
-                >
-                <div>
-                    <input 
-                        type="checkbox"
-                        checked={completed}
-                        onChange={(e) => handleCompleted({
-                            id : props.id,
-                            text : newText,
-                            username : props.username,
-                            completed : e.target.checked
-                        })}
-                        disabled={editMode}
-                    />
+
+        <div className="flex-col justify-center items-center border-[2px] border-black rounded-t-3xl rounded-b-2xl w-full">
+                <p className="flex justify-between border-b-[2px] border-black ">
+                    <div></div>
+                    <h3>{props.title}</h3>
+                    <p>{props.username}</p>
+                </p>
+
+                <ul>
+                    {tasks?.map(task => {
+                        return (
+                            <li key={`${props.id}-${task.id}`}>
+                                <TodoTask {...task} onDelete={() => handleTaskDelete(task.id)}/>
+                            </li>
+                        )
+                    })}
+                </ul>
+
+                <div className="flex justify-center items-center">
+                    <button 
+                        className=" hover:bg-gray-400 px-[6px] py-[4px] rounded-full"
+                        onClick={() => handleAddTask()}
+                        >
+                        Add New Task
+                    </button>
                 </div>
-
-                <div className="flex flex-grow justify-between items-center">
-                    <div>
-                        <p className="text-lg">{props.username}</p>
-
-                        {editMode ? 
-                            <input 
-                                className="placeholder:text-gray-900 bg-yellow-600 flex flex-grow"
-                                defaultValue={newText}
-                                placeholder="write your note"
-                                value={newText}
-                                onChange={(e) => setNewText(e.target.value)}
-                            />
-                            :
-                            <p className="text-md">{newText}</p>
-                        }
-                        
-                    </div>
-                    
-                    <div className={`${!hover && !editMode && "invisible"} flex gap-x-[4px]`}>
-
-                        {editMode ?
-                            <>
-                                <img 
-                                    className="w-[24px] h-[24px] p-[4px] rounded-full hover:bg-yellow-300"
-                                    src="undo.svg"
-                                    alt="undo-button"
-                                    onClick={() => handleUndoClick()}
-                                />
-
-                                <img 
-                                    className="w-[24px] h-[24px] p-[4px] rounded-full hover:bg-yellow-300"
-                                    src="confirm.svg"
-                                    alt="confirm-button"
-                                    onClick={() => handleTextUpdate({
-                                        id : props.id,
-                                        text : newText,
-                                        username : props.username,
-                                        completed : completed
-                                    })}
-                                />                           
-                            </>
-                            :
-                            <img 
-                                className={`w-[24px] h-[24px] cursor-pointer`}
-                                src="edit.svg"
-                                alt="edit-button"
-                                onClick={() => setEditMode(true)}
-                            /> 
-                        }
-                        
-
-                        <img 
-                            className={`w-[24px] h-[24px] cursor-pointer`}
-                            src="trashcan.svg"
-                            alt="delete-button"
-                            onClick={() => handleDelete()}
-                        /> 
-                    </div>
-                </div>
-
-                
-            </div>
-            
-            <ul className="inline space-x-[4px] space-y-[2px]">
-                {tagsData.map((tag, key) => {
-                    return (
-                        <li key={key} className="inline h-full">
-                            <Tag {...tag}/>
-                        </li>
-                    )
-                })}
-            </ul>
         </div>
-
+            
                     
         //</div> <div className="relative  h-[600px] w-[400px]">
         //     {

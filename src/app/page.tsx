@@ -1,7 +1,7 @@
 import { AddNewListBtn } from "@/components/addNewListBtn";
 import { ListGrid } from "@/components/listGrid";
 import { TodoList, TodoListProps } from "@/components/todoList";
-import { GetLists, GetListsForUser } from "@/handlers/apiHandlers";
+import { GetLists, GetListsForUser } from "@/handlers/listHandlers";
 
 export const dynamic = 'force-dynamic'
 
