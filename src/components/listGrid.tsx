@@ -1,9 +1,8 @@
 "use client"
 import { API_ROUTE, AddNewTodoList, GetListsForUser } from "@/handlers/apiHandlers";
 import { useEffect, useState } from "react";
-import { TodoList, TodoListData, TodoListProps } from "./todoList";
+import { TodoList, TodoListData } from "./todoList";
 import { AddNewListBtn } from "./addNewListBtn";
-import { debug } from "console";
 
 export const ListGrid = () => {
     const [username, setUsername] = useState("");
@@ -33,6 +32,7 @@ export const ListGrid = () => {
             id : 0,
             text : "example text",
             username : username,
+            completed : false,
         };
 
         AddNewTodoList({
@@ -56,10 +56,11 @@ export const ListGrid = () => {
                 onChange={(e) => setUsername(e.target.value)}
             />
 
-            <div className="grid grid-cols-3 gap-x-4 gap-y-3">
+            <div className="grid grid-cols-1 border-[1px] rounded-3xl">
+                <p className="flex justify-center">TODO LIST #1</p>
                 {
-                    Array.isArray(noteList) && noteList?.map((listData, key) => {
-                        return <TodoList key={key} {...listData} onListDelete={handleDeleteNote}/>
+                    noteList?.map((listData) => {
+                        return <TodoList key={listData.id} {...listData} onListDelete={handleDeleteNote}/>
                     })
                 }
             </div>

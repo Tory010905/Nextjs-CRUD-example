@@ -97,3 +97,28 @@ export async function DeleteTodoList(params : DeleteListParams) {
     })
     .catch(err => console.log(err));
 }
+
+interface UpdataListParams {
+    listData : TodoListData
+    onFetchComplete? : (response : TodoListData) => void
+}
+
+export async function UpdateTodoList(params : UpdataListParams) {
+    await fetch(`${API_ROUTE}/todoLists/${params.listData.id}`, 
+        {
+            method : "PUT",
+            headers : {
+                'Content-Type' : 'application/json'
+            },
+            body : JSON.stringify(params.listData)
+        }
+    )
+    .then(response => response.json())
+    .then(response => {
+        if(response != undefined && params.onFetchComplete){
+            params.onFetchComplete(response);
+        }
+    })
+    .catch(err => console.log(err));
+    
+}
