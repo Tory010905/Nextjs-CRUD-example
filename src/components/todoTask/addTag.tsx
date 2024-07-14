@@ -38,7 +38,6 @@ export const AddTag = (props: AddTagProps) => {
             >
             <>
                 <BackgroundlessInput
-                    classNameCustom="w-[124px]"
                     placeholder={"Click To Add New Tag"}
                     value={tagText}
                     onChange={(e) => setTagText(e.target.value)}

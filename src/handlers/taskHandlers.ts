@@ -1,3 +1,19 @@
+/**
+ * This file contains facade over the mockAPI
+ * Allows basic CRUD operations with user's tasks in certain list
+ * 
+ * In my mockAPI scheme, tasks are subentity to the lists, 
+ * each task has foreign key todoListId, which is the primary key
+ * of parent list.
+ * 
+ * Methods also contain callbacks on certain actions, for example
+ * there is frequent use of methods like "onFetchComplete", which
+ * itself are defined in placed where the parent method is called.
+ * 
+ * This allows for flexible design and more straightforward work
+ * with the API calls
+ */
+
 import { TodoListData } from "@/components/todoList";
 import { TodoTaskData } from "@/components/todoTask"
 

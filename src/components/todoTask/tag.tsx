@@ -16,9 +16,12 @@ export const Tag = (props : TagProps) => {
 
     return (
         <div className={`
-            text-[12px] rounded-full
-            px-[8px]
-            py-[6px]
+            md:text-[12px] rounded-lg
+            md:px-[8px]
+            md:py-[6px]
+            text-[10px]
+            px-[4px]
+            py-[3px]
             border-black
             border-[1px]
             inline-block
@@ -28,7 +31,7 @@ export const Tag = (props : TagProps) => {
                         <img
                             src={props.iconPath}
                             alt="icon"
-                            className="w-[10px] h-[10px] inline"
+                            className="md:w-[10px] md:h-[10px] w-[8px] h-[8px]"
                         />
                     }
 
@@ -38,7 +41,7 @@ export const Tag = (props : TagProps) => {
                         <img
                             src={"cross.svg"}
                             alt="delete-tag-button"
-                            className="w-[12px] h-[12px] inline cursor-pointer"
+                            className="md:w-[12px] md:h-[12px] w-[8px] h-[8px] cursor-pointer"
                             onClick={() => props.onDelete()}
                         />
                     }

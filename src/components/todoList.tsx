@@ -1,11 +1,10 @@
 'use client'
 
-import { DeleteTodoList, UpdateTodoList } from "@/handlers/listHandlers"
-import moment from "moment";
-import { useEffect, useState, KeyboardEvent, useRef, TextareaHTMLAttributes } from "react";
-import { Tag, TagProps } from "./todoTask/tag";
-import { PriorityEnum, TodoTask, TodoTaskData } from "./todoTask";
+import { TodoTask, TodoTaskData, TodoTaskProps } from "./todoTask";
 import { AddTodoTaskToList, DeleteTodoTaskFromList } from "@/handlers/taskHandlers";
+import { AddButton } from "./addButton";
+import { useEffect, useState } from "react";
+import { UpdateTodoList } from "@/handlers/listHandlers";
 
 export interface TodoListData {
     id : number,
@@ -13,16 +12,47 @@ export interface TodoListData {
     title : string,
     tasks : TodoTaskData[]
 }
-    
 
 export interface TodoListProps extends TodoListData  {
     onListDelete : (id : number) => void
+    editMode? : boolean
 }
-
 
 export const TodoList = (props : TodoListProps) => {
 
-    const [tasks, setTasks] = useState<TodoTaskData[]>(props.tasks);
+    const [tasks, setTasks] = useState<TodoTaskProps[]>(props.tasks?.map(task => {
+        return {
+            ...task,
+            onDelete : () => handleTaskDelete(task.id)
+        }
+    }));
+
+    const [editMode, setEditMode] = useState(props.editMode ?? false);
+    const [originalTitle, setOriginalTitle] = useState(props.title);
+    const [newTitle, setNewTitle] = useState(props.title);
+
+    useEffect(() => {
+        setNewTitle(originalTitle);
+    }, [editMode])
+
+    const handleTitleUpdate = () => {
+        setOriginalTitle(newTitle);
+
+        UpdateTodoList({
+            listData : {
+                id : props.id,
+                tasks : tasks,
+                title : originalTitle,
+                username : props.username
+            }
+        })
+
+        setEditMode(false);
+    }
+
+    const handleEditUndo = () => {
+        setEditMode(false);
+    }
 
     const handleAddTask = () => {
         AddTodoTaskToList({
@@ -31,12 +61,16 @@ export const TodoList = (props : TodoListProps) => {
                 completed : false,
                 id : 0,
                 todoListId : props.id,
-                text : "example text",
+                text : "Example Text",
                 priority : null,
                 dueDate : null
             },
             onFetchComplete : (validData) => {
-                setTasks(tasks => [...tasks, validData])
+                setTasks(tasks => [...tasks, {
+                    ...validData,
+                    onDelete : () => handleTaskDelete(validData.id),
+                    editMode : true
+                }])
             }
         })
     }
@@ -59,115 +93,75 @@ export const TodoList = (props : TodoListProps) => {
 
     return (
 
-        <div className="flex-col justify-center items-center border-[2px] border-black rounded-t-3xl rounded-b-2xl w-full">
-                <div className="flex justify-between border-b-[2px] border-black ">
-                    <h3>{props.title}</h3>
-                    <p>{props.username}</p>
+        <div className="flex-col justify-center items-center border-[2px] border-black md:rounded-t-3xl rounded-t-xl md:rounded-b-2xl rounded-b-sm w-full">
+                <div className="flex justify-between border-b-[2px] border-black px-[10px]">
+                    <div className="md:text-2xl text-lg flex-1 ml-[16px] overflow-x-hidden">
+                        {editMode ? 
+                            <input 
+                            className="w-[100%]"
+                                value={newTitle}
+                                onChange={e => setNewTitle(e.target.value)}
+                            />
+                            :
+                            <h3 className="w-[100%] font-bold">
+                                {originalTitle}
+                            </h3>
+                        }
+                        
+                    </div>
+                    
+
+                    <div className="flex flex-shrink-0 justify-end items-center w-[100px]">
+                        {editMode ?
+                            <>
+                                <img
+                                    src="undo.svg"
+                                    alt="edit-title-button"
+                                    className="w-[32px] h-[32px] p-[8px]"
+                                    onClick={() => handleEditUndo()}
+                                    
+                                />
+                                <img
+                                    src="confirm.svg"
+                                    alt="edit-title-button"
+                                    className="w-[32px] h-[32px] p-[8px]"
+                                    onClick={() => handleTitleUpdate()}
+                                />
+                            </>
+                            :
+                            <img
+                                src="edit.svg"
+                                alt="edit-title-button"
+                                className="w-[32px] h-[32px] p-[8px] cursor-pointer"
+                                onClick={() => setEditMode(true)}
+                            />
+                        }
+                        
+                        <img
+                            src="trashcan.svg"
+                            alt="delete-list-button"
+                            className="w-[32px] h-[32px] p-[8px]"
+                            onClick={() => props.onListDelete(props.id)}
+                        />
+                    </div>
                 </div>
 
                 <ul>
                     {tasks?.map(task => {
                         return (
                             <li key={`${props.id}-${task.id}`}>
-                                <TodoTask {...task} onDelete={() => handleTaskDelete(task.id)}/>
+                                <TodoTask {...task}/>
                             </li>
                         )
                     })}
                 </ul>
 
                 <div className="flex justify-center items-center">
-                    <button 
-                        className=" hover:bg-gray-400 px-[6px] py-[4px] rounded-full"
+                    <AddButton
                         onClick={() => handleAddTask()}
-                        >
-                        Add New Task
-                    </button>
+                        text="Add New Task"
+                    />
                 </div>
         </div>
-            
-                    
-        //</div> <div className="relative  h-[600px] w-[400px]">
-        //     {
-        //         completed && 
-        //         <div 
-        //             className="absolute bottom-0 right-0 left-0 top-0 bg-opacity-50 bg-gray-700"
-        //             onClick={() => handleCompleted({
-        //                 id : props.id,
-        //                 text : newText,
-        //                 username : props.username,
-        //                 completed : false
-        //             })}
-        //         >
-        //             <div className="flex flex-col justify-center items-center h-full">
-        //                 Completed
-        //             </div>
-        //         </div>
-        //     }
-            
-
-        //     <div className="flex flex-col flex-nowrap h-[600px] justify-between bg-yellow-600 px-[24px] pt-[20px] pb-[16px] rounded-lg">
-        //         <div className="flex justify-between">
-        //             <p>{props.id} {props.username}</p>                    
-
-        //             <img 
-        //                 className="w-[24px] h-[24px] cursor-pointer"
-        //                 src="trashcan.svg"
-        //                 alt="delete-button"
-        //                 onClick={() => handleCompleted({
-        //                     id : props.id,
-        //                     text : newText,
-        //                     username : props.username,
-        //                     completed : true
-        //                 })}
-        //                 // onClick={() => DeleteTodoList({
-        //                 //     id : props.id,
-        //                 //     onFetchComplete : () => props.onListDelete(props.id)
-        //                 // })}
-        //             />                
-        //         </div>
-        //         <div>
-        //             <p>Priority: </p>
-
-        //             <p>Due date: <input type="date"/> </p>
-
-        //             <p>Tags: </p>
-        //         </div>
-        //         <div className="flex flex-col flex-grow">
-        //             <textarea
-        //                 className="placeholder:text-gray-900 bg-yellow-600 flex flex-grow"
-        //                 defaultValue={originalText}
-        //                 placeholder="write your note"
-        //                 value={newText}
-        //                 onChange={(e) => setNewText(e.target.value)}
-        //                 onKeyDown={(e) => handleKeyDown(e)}
-        //                 ref={textAreaRef}
-        //                 >
-        //             </textarea>
-        //             <div className="flex justify-between flex-grow-0 h-[24px]">
-        //                 {
-        //                     edited && <>
-        //                         <img 
-        //                             className="w-[24px] h-[24px] p-[4px] rounded-full hover:bg-yellow-300"
-        //                             src="undo.svg"
-        //                             onClick={() => handleUndoClick()}
-        //                         />
-
-        //                         <img 
-        //                             className="w-[24px] h-[24px] p-[4px] rounded-full hover:bg-yellow-300"
-        //                             src="confirm.svg"
-        //                             onClick={() => handleTextUpdate({
-        //                                 id : props.id,
-        //                                 text : newText,
-        //                                 username : props.username,
-        //                                 completed : completed
-        //                             })}
-        //                         />
-        //                     </>
-        //                 }
-                        
-        //             </div>
-        //         </div>
-        //     </div>
-        // </div>
     )
 }

@@ -1,12 +1,12 @@
 "use client"
 import {  AddNewTodoList, GetListsForUser } from "@/handlers/listHandlers";
 import { useEffect, useState } from "react";
-import { TodoList, TodoListData } from "./todoList";
-import { AddNewListBtn } from "./addNewListBtn";
+import { TodoList, TodoListData, TodoListProps } from "./todoList";
+import { AddButton } from "./addButton";
 
 export const ListGrid = () => {
     const [username, setUsername] = useState("");
-    const [noteList, setNoteList] = useState<TodoListData[]>([])
+    const [listArray, setListArray] = useState<TodoListProps[]>([])
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -16,7 +16,12 @@ export const ListGrid = () => {
             GetListsForUser({
                 username : username,
                 onFetchComplete : (response) => {
-                    setNoteList(response);
+                    setListArray(response.map(list => {
+                        return {
+                            ...list,
+                            onListDelete : (id) => handleDeleteList(id), 
+                        }
+                    }));
                     setLoading(false);
                 }
             })
@@ -26,9 +31,8 @@ export const ListGrid = () => {
     }, [username])
 
 
-    const handleAddNewNote = () => {
+    const handleAddNewList = () => {
         if(username === ""){
-            alert("select valid username first");
             return;
         }
 
@@ -42,40 +46,62 @@ export const ListGrid = () => {
         AddNewTodoList({
             listData : newTodoList,
             onFetchComplete : (validData) => {
-                setNoteList(array => [...array, validData])
+                setListArray(array => [...array, {
+                    ...validData,
+                    onListDelete : (id) => handleDeleteList(id),
+                    editMode : true
+                }])
             }
         });
     }
 
-    const handleDeleteNote = (id : number) => {
-        let filteredList = noteList.filter(x => x.id != id);
-        setNoteList(filteredList);
+    const handleDeleteList = (id : number) => {
+        let filteredList = listArray.filter(x => x.id != id);
+        setListArray(filteredList);
     }
 
     return (
         <>
-            <input 
-                value={username}
-                placeholder="username"
-                onChange={(e) => setUsername(e.target.value)}
-            />
-
-            
+            <div className="flex justify-center items-center gap-x-[8px]">
+                <input 
+                    className="px-[8px] py-[6px] rounded-full border-2 border-black"
+                    value={username}
+                    placeholder="Type your username"
+                    onChange={(e) => setUsername(e.target.value)}
+                />
+            </div>
                 {
                     loading ?
                         <p>
                             Loading todo lists for user {username}
                         </p>
                         :
-                        noteList?.map((listData) => {
-                            return <TodoList key={listData.id} {...listData} onListDelete={handleDeleteNote}/>
-                        })
+                        listArray && listArray.length > 0 ?
+                            listArray.map((listData) => {
+                                return <TodoList key={listData.id} {...listData}/>
+                            })
+                        :
+                        username.length > 0 ?
+                        <div className="h-[400px] flex justify-center items-center px-[10%]">
+                            <div className="text-center">
+                            <p className="md:text-3xl">Looks like user <b>{username}</b> has no task lists.</p>
+                            <p className="md:text-2xl">You can add one by clicking button bellow</p>
+                            </div>
+                        </div>
+                        :
+                        <div className="h-[400px] flex justify-center items-center px-[10%]">
+                            <div className="text-center">
+                                <p className="md:text-3xl text-2xl font-bold">Welcome to my simple Task Organizer</p>
+                                <p className="md:text-2xl text-xl">To start, simply type your desired username to the input bar above</p>
+                            </div>
+                        </div>
+                        
                 }
-            
-            <div className="fixed bottom-4 right-4">
-                <AddNewListBtn onClick={handleAddNewNote}/>
-            </div>
-            
+            {username.length > 0 &&
+                <div className="fixed bottom-[50px]">
+                    <AddButton text={"Add Task List"} onClick={handleAddNewList}/>
+                </div>
+            }     
         </>
     )
 }

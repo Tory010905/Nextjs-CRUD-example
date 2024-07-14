@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TODO lists",
+  title: "Task organizer",
   description: "Next.js CRUD example project",
 };
 
