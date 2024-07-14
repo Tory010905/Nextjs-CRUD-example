@@ -63,7 +63,9 @@ export const ListGrid = () => {
             
                 {
                     loading ?
-                        <p>loading</p>
+                        <p>
+                            Loading todo lists for user {username}
+                        </p>
                         :
                         noteList?.map((listData) => {
                             return <TodoList key={listData.id} {...listData} onListDelete={handleDeleteNote}/>

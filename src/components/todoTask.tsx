@@ -7,13 +7,12 @@ import { BackgroundlessInput } from "./utils/backgroundlessInput"
 import { AddTag } from "./todoTask/addTag"
 
 export enum PriorityEnum {
-    NONE,
-    LOW,
-    MEDIUM,
-    HIGH,
-    EXTREME
+    None,
+    Low,
+    Medium,
+    High,
+    Extreme
 }
-
 
 export interface TodoTaskData {
     id: number
@@ -81,11 +80,6 @@ export const TodoTask = (props: TodoTaskProps) => {
         setOriginalTaskData(newData);
     }
 
-    // useEffect(() => {
-    //     console.log(completed, text, dueDate, priority)
-    //     handleTaskUpdate();
-    // }, [completed, text, dueDate, priority])
-
     // const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     //     switch (e.key) {
     //         case "Escape": handleUndoClick(); break;
@@ -106,7 +100,7 @@ export const TodoTask = (props: TodoTaskProps) => {
 
     return (
         <div
-            className="p-[4px] border-b-[1px] flex items-center group/task"
+            className={`p-[4px] border-b-[1px] flex items-center group/task ${completed && "bg-gray-200"}`}
         >
             <div className="flex flex-grow-0 px-[4px]">
                 <input
@@ -121,17 +115,63 @@ export const TodoTask = (props: TodoTaskProps) => {
                 <div className="flex flex-grow justify-between">
                     <div className="overflow-hidden">
                         {editMode ?
-                            <div className="flex gap-x-[4px]">
-                                <p>text: </p>
-                                <BackgroundlessInput
-                                    type="text"
-                                    classNameCustom="truncate overflow-hidden whitespace-nowrap block"
-                                    value={text}
-                                    onChange={e => setText(e.target.value)}
-                                />
-                            </div>
+                            <>
+                                <div className="flex gap-x-[4px]">
+                                    <p>Edit Text: </p>
+                                    <BackgroundlessInput
+                                        placeholder={"Task Title"}
+                                        type="text"
+                                        classNameCustom="truncate overflow-hidden whitespace-nowrap block"
+                                        value={text}
+                                        onChange={e => setText(e.target.value)}
+                                    />
+                                </div>
+
+                                {dueDate ? 
+                                    <div className="flex justify-start items-center gap-x-[4px]">
+                                        <p>Select Date: </p>
+                                        <input
+                                            type="date"
+                                            value={moment(dueDate).format("YYYY-MM-DD")}
+                                            onChange={(e) => setDueDate(new Date(e.target.value))}
+                                        />
+
+                                        <button 
+                                            className="rounded-full border-[1px] border-black px-[6px] py-[4px] hover:bg-gray-200"
+                                            onClick={() => setDueDate(undefined)}
+                                            >
+                                            Remove Due Date
+                                        </button>
+                                    </div>
+                                    :
+                                    <button 
+                                        className="rounded-full border-[1px] border-black px-[6px] py-[4px] hover:bg-gray-200"
+                                        onClick={() => setDueDate(new Date(Date.now()))}
+                                        >
+                                        Schedule Due Date
+                                    </button>
+                                }
+
+                                <div className="flex gap-x-[4px]">
+                                    <p>Select Priority</p>
+                                    <select
+                                        value={PriorityEnum[priority ?? 0]}
+                                        onChange={e => setPriority(PriorityEnum[e.target.value as keyof typeof PriorityEnum])}
+                                        >
+                                        {Object.keys(PriorityEnum).filter(key => isNaN(Number(key))).map(priorityOption => {
+                                            return <option>{priorityOption}</option>
+                                        })}
+                                    </select>
+                                </div>
+                                
+                            </>
+
+                            
+
                             :
-                            <h3 className="truncate overflow-hidden whitespace-nowrap block">
+                            <h3 
+                                className={`truncate overflow-hidden whitespace-nowrap block ${completed && "line-through"}`}
+                            >
                                 {originalTaskData.text}
                             </h3>
 
@@ -142,7 +182,7 @@ export const TodoTask = (props: TodoTaskProps) => {
                 </div>
 
                 <ul className="space-x-[4px] space-y-[2px]">
-                    {priority &&
+                    {originalTaskData.priority != undefined && originalTaskData.priority > PriorityEnum.None && !editMode &&
                         <li key={-2} className="inline h-full">
                             <Tag
                                 onDelete={() => {
@@ -151,13 +191,13 @@ export const TodoTask = (props: TodoTaskProps) => {
                                 editMode={editMode}
 
                             >
-                                <p>{priority.toString()}</p>
+                                <p>{PriorityEnum[originalTaskData.priority ?? 0]} priority</p>
                             </Tag>
                         </li>
 
                     }
 
-                    {dueDate &&
+                    {originalTaskData.dueDate && !editMode &&
                         <li key={-1} className="inline h-full">
                             <Tag
                                 onDelete={() => {
@@ -201,9 +241,8 @@ export const TodoTask = (props: TodoTaskProps) => {
                 </ul>
             </div>
 
-            <div className={`flex justify-end items-center gap-x-[8px] flex-shrink-0 flex-grow
-                            ${!editMode && "group-hover/task:visible invisible"}`}
-            >
+            {/* ${!editMode && "group-hover/task:visible invisible"} */}
+            <div className={`flex justify-end items-center gap-x-[8px] flex-shrink-0 flex-grow`}>
                 {editMode ?
                     <>
                         <img
@@ -239,94 +278,4 @@ export const TodoTask = (props: TodoTaskProps) => {
             </div>
         </div>
     )
-
-    /*
-    return (
-        <div className="px-[12px] py-[10px] w-[500px] border-b-[1px]">
-            <div className="flex gap-x-[10px] justify-stretch items-center "
-                onMouseEnter={() => setHover(true)}
-                onMouseLeave={() => setHover(false)}
-                >
-                <div>
-                    <input 
-                        type="checkbox"
-                        checked={completed}
-                        onChange={(e) => handleCompleted({
-                            id : props.id,
-                            text : newText,
-                            username : props.username,
-                            completed : e.target.checked
-                        })}
-                        disabled={editMode}
-                    />
-                </div>
-
-                <div className="flex flex-grow justify-between items-center">
-                    <div>
-                        <p className="text-lg">{props.username}</p>
-
-                        {editMode ? 
-                            <input 
-                                className="placeholder:text-gray-900 bg-yellow-600 flex flex-grow"
-                                defaultValue={newText}
-                                placeholder="write your note"
-                                value={newText}
-                                onChange={(e) => setNewText(e.target.value)}
-                            />
-                            :
-                            <p className="text-md">{newText}</p>
-                        }
-                        
-                    </div>
-                    
-                    <div className={`${!hover && !editMode && "invisible"} flex gap-x-[4px]`}>
-
-                        {editMode ?
-                            <>
-                                <img 
-                                    className="w-[24px] h-[24px] p-[4px] rounded-full hover:bg-yellow-300"
-                                    src="undo.svg"
-                                    alt="undo-button"
-                                    //onClick={() => handleUndoClick()}
-                                />
-
-                                <img 
-                                    className="w-[24px] h-[24px] p-[4px] rounded-full hover:bg-yellow-300"
-                                    src="confirm.svg"
-                                    alt="confirm-button"
-                                    // onClick={() => handleTextUpdate({
-                                    //     id : props.id,
-                                    //     text : newText,
-                                    //     username : props.username,
-                                    //     completed : completed
-                                    // })}
-                                />                           
-                            </>
-                            :
-                            <img 
-                                className={`w-[24px] h-[24px] cursor-pointer`}
-                                src="edit.svg"
-                                alt="edit-button"
-                                onClick={() => setEditMode(true)}
-                            /> 
-                        }
-                        
-
-                        <img 
-                            className={`w-[24px] h-[24px] cursor-pointer`}
-                            src="trashcan.svg"
-                            alt="delete-button"
-                            //onClick={() => handleDelete()}
-                        /> 
-                    </div>
-                </div>
-
-                
-            </div>
-            
-            
-        </div>
-        
-    )
-        */
 }

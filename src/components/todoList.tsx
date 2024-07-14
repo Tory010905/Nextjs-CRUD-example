@@ -31,21 +31,27 @@ export const TodoList = (props : TodoListProps) => {
                 completed : false,
                 id : 0,
                 todoListId : props.id,
-                text : "example text"
+                text : "example text",
+                priority : null,
+                dueDate : null
             },
             onFetchComplete : (validData) => {
-                setTasks(array => [...array, validData])
+                setTasks(tasks => [...tasks, validData])
             }
         })
     }
 
     const handleTaskDelete = (taskId : number) => {
+        let deletedTask = {...tasks.filter(x => x.id === taskId)[0]};
+
+        let filteredTasks= tasks.filter(x => x.id !== taskId);
+        setTasks(filteredTasks);
+
         DeleteTodoTaskFromList({
             id : taskId,
             listId : props.id,
-            onFetchComplete : () => {
-                let filteredTasks= tasks.filter(x => x.id != taskId);
-                setTasks(filteredTasks);
+            onError : () => {
+                setTasks(tasks => [...tasks, deletedTask])
             }
         })
     }

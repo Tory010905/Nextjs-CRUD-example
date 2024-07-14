@@ -53,7 +53,7 @@ export async function AddTodoTaskToList(params : AddTaskParams) {
 interface DeleteTaskParams {
     id : number,
     listId : number,
-    onFetchComplete? : () => void
+    onError? : () => void
 }
 
 export async function DeleteTodoTaskFromList(params : DeleteTaskParams) {
@@ -61,11 +61,19 @@ export async function DeleteTodoTaskFromList(params : DeleteTaskParams) {
             method : "DELETE" 
         })
         .then(response => {
-            if(response.ok && params.onFetchComplete){
-                params.onFetchComplete();
+            if(response.ok){
+                return;
             }
+
+            throw new Error("Failed to delete task");
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            if(params.onError){
+                params.onError();
+            } 
+            
+            console.log(err);
+        });
 }
 
 interface UpdateListParams {
