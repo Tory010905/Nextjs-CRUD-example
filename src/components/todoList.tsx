@@ -3,16 +3,9 @@
 import { DeleteTodoList, UpdateTodoList } from "@/handlers/listHandlers"
 import moment from "moment";
 import { useEffect, useState, KeyboardEvent, useRef, TextareaHTMLAttributes } from "react";
-import { Tag, TagProps } from "./tag";
+import { Tag, TagProps } from "./todoTask/tag";
 import { PriorityEnum, TodoTask, TodoTaskData } from "./todoTask";
 import { AddTodoTaskToList, DeleteTodoTaskFromList } from "@/handlers/taskHandlers";
-
-function PriorityToHexColor(priority : PriorityEnum){
-    switch(priority){
-        case PriorityEnum.NONE: return "#000000"; 
-        case PriorityEnum.LOW : return "#"
-    }
-}
 
 export interface TodoListData {
     id : number,
@@ -61,11 +54,10 @@ export const TodoList = (props : TodoListProps) => {
     return (
 
         <div className="flex-col justify-center items-center border-[2px] border-black rounded-t-3xl rounded-b-2xl w-full">
-                <p className="flex justify-between border-b-[2px] border-black ">
-                    <div></div>
+                <div className="flex justify-between border-b-[2px] border-black ">
                     <h3>{props.title}</h3>
                     <p>{props.username}</p>
-                </p>
+                </div>
 
                 <ul>
                     {tasks?.map(task => {
